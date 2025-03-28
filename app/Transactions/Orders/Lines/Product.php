@@ -3,16 +3,34 @@
 namespace App\Transactions\Orders\Lines;
 
 use App\Models\OrderProduct;
+use App\Services\PriceCalculator;
+use App\Transactions\Clients\ClientType;
 use App\Transactions\Orders\ReceiptLine;
 use Brick\Money\Money;
 
 class Product implements ReceiptLine
 {
     protected OrderProduct $item;
+    protected PriceCalculator $priceCalculator;
+    protected ClientType $clientType;
+    protected array $priceDetails;
 
-    public function __construct(OrderProduct $item)
+    public function __construct(OrderProduct $item, ClientType $clientType)
     {
         $this->item = $item;
+        $this->priceCalculator = new PriceCalculator();
+        $this->clientType = $clientType;
+
+        $productData = [
+            'price_selling' => $this->item->product->price_selling,
+            'price_acquisition' => $this->item->product->price_acquisition,
+            'category' => $this->item->product->category,
+            'price_final' => $this->item->price_final,
+            'quantity' => $this->item->quantity,
+        ];
+
+        $this->priceDetails = $this->priceCalculator->calculateFinalPrice($productData, $this->clientType);
+        
     }
 
     public function isDisplayable(): bool
@@ -42,7 +60,27 @@ class Product implements ReceiptLine
 
     public function getPrice(): Money
     {
-        return $this->item->price_final;
+        return $this->priceDetails['basePrice'];
+    }
+
+    public function getDiscountedPrice(): Money
+    {
+        return $this->priceDetails['discountedPrice'];
+    }
+
+    public function getDiscountValue(): ?Money
+    {
+        return $this->priceDetails['discountValue'];
+    }
+
+    public function hasMargin(): bool
+    {
+        return $this->priceDetails['hasMargin'];
+    }
+
+    public function getDiscountLabel(): ?string
+    {
+        return $this->priceDetails['discountLabel'];
     }
 
     public function getDisplayablePrice(): ?string

@@ -11,12 +11,37 @@ class Subtotal implements ReceiptLine
 {
     use FormatsPrices;
 
+    public function getDiscountLabel(): ?string
+    {
+        return null;
+    }
+
+    public function getDiscountedPrice(): Money
+    {
+        return $this->discountedPrice;
+    }
+
+    public function getDiscountValue(): ?Money
+    {
+        return null; 
+    }
+
+    public function hasMargin(): bool
+    {
+        return false;
+    }
+
     protected Money $total;
+    protected Money $discountedPrice;
 
     public function __construct(Collection $products)
     {
         $this->total = $products->reduce(function (Money $carry, Product $line) {
             return $carry->plus($line->getPrice());
+        }, Money::zero('EUR'));
+
+        $this->discountedPrice = $products->reduce(function (Money $carry, Product $line) {
+            return $carry->plus($line->getDiscountedPrice());
         }, Money::zero('EUR'));
     }
 

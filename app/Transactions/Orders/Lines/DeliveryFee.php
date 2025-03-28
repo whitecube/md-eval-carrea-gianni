@@ -10,6 +10,26 @@ class DeliveryFee implements ReceiptLine
 {
     use FormatsPrices;
 
+    public function getDiscountedPrice(): Money
+    {
+        return $this->getPrice();
+    }
+
+    public function getDiscountValue(): ?Money
+    {
+        return null; 
+    }
+
+    public function hasMargin(): bool
+    {
+        return false;
+    }
+
+    public function getDiscountLabel(): ?string
+    {
+        return null;
+    }
+
     public function isDisplayable(): bool
     {
         return true;
