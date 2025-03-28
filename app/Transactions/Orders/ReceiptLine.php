@@ -21,4 +21,12 @@ interface ReceiptLine
     public function getDisplayablePrice(): ?string;
 
     public function getProductAttributes(): array;
+
+    public function getDiscountedPrice(): Money;
+
+    public function getDiscountValue(): ?Money;
+
+    public function hasMargin(): bool;
+
+    public function getDiscountLabel(): ?string;
 }

@@ -22,10 +22,26 @@
                     :key="item.id"
                     :item="item" />
             </div>
+
+            <!-- Display discount line if totalDiscount > 0 and no margin -->
+            <div class="cart__discount" v-if="hasDiscount">
+                <p class="title">Remises :</p>
+                <p>-{{ discountValue }}</p>
+            </div>
+
+            <div class="cart__discount_label" v-if="hasDiscount">
+                <p>{{ discountLabels }}</p>
+            </div>
+
             <div class="cart__total">
                 <p class="title">Total</p>
-                <p v-html="total"></p>
+                <p v-html="discountedTotal"></p>
             </div>
+            
+            <!-- Display margin message if hasMargin is true -->
+            <p v-if="hasMargin" class="cart__margin">(Marge pour grossistes comprise)</p>
+
+            
         </div>
     </div>
 </template>
@@ -44,44 +60,57 @@ export default {
             items: [],
             detail: [],
             total: 0,
-            url: null
+            discountedTotal: 0,
+            discountValue: 0,
+            url: null,
+            hasMargin: false,
+            hasDiscount: false,
+            discountLabels: [],
         }
     },
 
     mounted() {
+
+
         this.items = this.receipt.items;
         this.detail = this.receipt.detail;
         this.total = this.receipt.total;
+        this.discountedTotal = this.receipt.discountedTotal;
+        this.discountValue = this.receipt.discountValue;
+        this.discountLabels = this.receipt.discountLabels;
         this.url = this.receipt.route;
+        this.hasMargin = this.receipt.hasMargin;
+        this.hasDiscount = this.receipt.hasDiscount;
     },
 
     methods: {
+
         increment(product) {
             let item = this.items.find(item => item.product === product.id);
 
-            if (! item) {
-                return this.update({id: product.id, quantity: 1});
+            if (!item) {
+                return this.update({ id: product.id, quantity: 1 });
             }
 
-            this.update({id: product.id, line: item.line, quantity: (item.quantity + 1)});
+            this.update({ id: product.id, line: item.line, quantity: (item.quantity + 1) });
         },
 
         decrement(product) {
             let item = this.items.find(item => item.product === product.id);
 
-            if (! item) {
+            if (!item) {
                 return;
             }
 
-            this.update({id: product.id, line: item.line, quantity: Math.max(0, item.quantity - 1)});
+            this.update({ id: product.id, line: item.line, quantity: Math.max(0, item.quantity - 1) });
         },
 
         remove(item) {
-            if (! item) {
+            if (!item) {
                 return;
             }
 
-            this.update({id: item.product, line: item.line, quantity: 0});
+            this.update({ id: item.product, line: item.line, quantity: 0 });
         },
 
         update(data) {
@@ -90,6 +119,11 @@ export default {
                 this.detail = response.data.detail;
                 this.total = response.data.total;
                 this.url = response.data.route;
+                this.discountLabels = response.data.discountLabels;
+                this.discountedTotal = response.data.discountedTotal;
+                this.discountValue = response.data.discountValue;
+                this.hasMargin = response.data.hasMargin;
+                this.hasDiscount = response.data.hasDiscount;
             });
         }
     }
@@ -132,9 +166,25 @@ export default {
 .cart__total {
     display: flex;
     justify-content: space-between;
+    border-top: 1px solid #1f1b30;
+    padding-top: 12px;
+    font-weight: bold;
+}
+
+.cart__discount {
+    display: flex;
+    justify-content: space-between;
     border-top: 1px solid #E9E9E9;
     padding-top: 12px;
     font-weight: bold;
+    color: #d9534f; /* Rouge pour indiquer une réduction */
+}
+
+.cart__discount_label {
+    display: flex;
+    border-top: 1px solid #E9E9E9;
+    padding-top: 8px;
+    color: #d9534f; /* Rouge pour indiquer une réduction */
 }
 
 @media screen and (max-width: 1024px) {
@@ -146,5 +196,12 @@ export default {
     .cart__side {
         width: 100%;
     }
+}
+
+.cart__margin {
+    color: #28a745; /* Green color for the margin message */
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    font-style: italic;
 }
 </style>
